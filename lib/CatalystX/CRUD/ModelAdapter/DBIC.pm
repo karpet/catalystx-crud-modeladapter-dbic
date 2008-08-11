@@ -94,7 +94,7 @@ on calling context, for a search() in resultset() for I<args>.
 
 sub search {
     my ( $self, $controller, $c, @arg ) = @_;
-    my $query = shift(@arg) || $self->make_query( $c, $controller );
+    my $query = shift(@arg) || $self->make_query( $controller, $c );
     my @rs
         = $c->model( $self->model_name )
         ->resultset( $self->_get_moniker( $controller, $c ) )
@@ -120,7 +120,7 @@ for a search() in resultset() for I<args>.
 
 sub iterator {
     my ( $self, $controller, $c, @arg ) = @_;
-    my $query = shift(@arg) || $self->make_query( $c, $controller );
+    my $query = shift(@arg) || $self->make_query( $controller, $c );
     my $rs
         = $c->model( $self->model_name )
         ->resultset( $self->_get_moniker( $controller, $c ) )
@@ -136,12 +136,12 @@ Implements required method. Returns count() in resultset() for I<args>.
 
 sub count {
     my ( $self, $controller, $c, @arg ) = @_;
-    my $query = shift(@arg) || $self->make_query( $c, $controller );
+    my $query = shift(@arg) || $self->make_query( $controller, $c );
     return $c->model( $self->model_name )
         ->resultset( $self->_get_moniker( $controller, $c ) )->count(@$query);
 }
 
-=head2 make_query( I<context>, I<controller>, I<field_names> )
+=head2 make_query( I<controller>, I<context>, I<field_names> )
 
 Returns an array ref of query data based on request params in I<context>,
 using param names that match I<field_names>.
@@ -150,8 +150,8 @@ using param names that match I<field_names>.
 
 sub make_query {
     my $self        = shift;
-    my $c           = shift;
     my $controller  = shift;
+    my $c           = shift;
     my $field_names = shift
         || $self->_get_field_names( $controller, $c );
 
@@ -163,10 +163,10 @@ sub make_query {
     weaken( $self->{context} );
 
     my @query;
-    my $q = $self->make_sql_query($field_names);
+    my $q = $self->make_sql_query($field_names) || {};
 
     push( @query,
-        { @{ $q->{query} } },
+        { @{ $q->{query} || [] } },
         $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
 
