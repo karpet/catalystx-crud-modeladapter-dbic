@@ -8,3 +8,14 @@ t/00-load.t
 t/01-dbic.t
 t/pod-coverage.t
 t/pod.t
+t/example.sql
+t/insertdb.pl
+t/lib/MyApp.pm
+t/lib/MyApp/Controller/CRUD.pm
+t/lib/MyApp/Model/Main.pm
+t/lib/MyForm.pm
+t/lib/MyModelAdapter.pm
+t/MyDB/Main.pm
+t/MyDB/Main/Artist.pm
+t/MyDB/Main/Cd.pm
+t/MyDB/Main/Track.pm

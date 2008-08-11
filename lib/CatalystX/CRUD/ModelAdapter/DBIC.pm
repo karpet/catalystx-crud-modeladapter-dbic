@@ -35,6 +35,13 @@ CatalystX::CRUD::ModelAdapter::DBIC - CRUD for Catalyst::Model::DBIC::Schema
 
 =cut
 
+=head2 new_object( I<controller>, I<context>, I<moniker> )
+
+Implement required method. Returns empty new_result() object
+from resultset() of I<moniker>.
+
+=cut
+
 sub new_object {
     my $self       = shift;
     my $controller = shift;
@@ -43,6 +50,14 @@ sub new_object {
     return $c->model( $self->model_name )->resultset($moniker)
         ->new_result( {} );
 }
+
+=head2 fetch( I<controller>, I<context>, I<moniker> [, I<args>] )
+
+Implements required method. Returns new_object() matching I<args>.
+I<args> is passed to the find() method of the resultset() for I<moniker>.
+If I<args> is not passed, fetch() acts the same as calling new_object().
+
+=cut
 
 sub fetch {
     my $self       = shift;
@@ -70,6 +85,13 @@ sub fetch {
     }
 }
 
+=head2 search( I<controller>, I<context>, I<args> )
+
+Implements required method. Returns array or array ref, based
+on calling context, for a search() in resultset() for I<args>.
+
+=cut
+
 sub search {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $c, $controller );
@@ -89,6 +111,13 @@ sub _get_moniker {
     return $moniker;
 }
 
+=head2 iterator( I<controller>, I<context>, I<args> )
+
+Implements required method. Returns iterator
+for a search() in resultset() for I<args>.
+
+=cut
+
 sub iterator {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $c, $controller );
@@ -99,12 +128,25 @@ sub iterator {
     return $rs;
 }
 
+=head2 count( I<controller>, I<context>, I<args> )
+
+Implements required method. Returns count() in resultset() for I<args>.
+
+=cut
+
 sub count {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $c, $controller );
     return $c->model( $self->model_name )
         ->resultset( $self->_get_moniker( $controller, $c ) )->count(@$query);
 }
+
+=head2 make_query( I<context>, I<controller>, I<field_names> )
+
+Returns an array ref of query data based on request params in I<context>,
+using param names that match I<field_names>.
+
+=cut
 
 sub make_query {
     my $self        = shift;
@@ -158,21 +200,45 @@ sub _get_field_names {
     return \@fields;
 }
 
+=head2 create( I<context>, I<dbic_object> )
+
+Calls insert() on I<dbic_object>.
+
+=cut
+
 sub create {
     my ( $self, $c, $object ) = @_;
     $object->insert;
 }
+
+=head2 read( I<context>, I<dbic_object> )
+
+Calls find() on I<dbic_object>.
+
+=cut
 
 sub read {
     my ( $self, $c, $object ) = @_;
     $object->find;    # TODO is this right?
 }
 
+=head2 update( I<context>, I<dbic_object> )
+
+Calls update() on I<dbic_object>.
+
+=cut
+
 sub update {
     my ( $self, $c, $object ) = @_;
     $object->update;
 
 }
+
+=head2 delete( I<context>, I<dbic_object> )
+
+Calls delete() on I<dbic_object>.
+
+=cut
 
 sub delete {
     my ( $self, $c, $object ) = @_;
