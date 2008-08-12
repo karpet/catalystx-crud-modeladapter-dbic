@@ -8,7 +8,7 @@
         END;
     END;
     
-    DEFAULT results     = results.results;
+    DEFAULT rows        = results.results;
     DEFAULT base_uri    = c.uri_for('');
 
 
@@ -22,7 +22,7 @@
    [% END %]
   </tr>
   [% SET count = 0;
-     FOREACH r = results;
+     FOREACH r = rows;
        count = count + 1;
    %]
    <tr [% IF (count % 2) %]class="alt"[% END %]>

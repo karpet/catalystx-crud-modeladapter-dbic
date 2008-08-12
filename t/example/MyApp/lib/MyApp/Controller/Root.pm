@@ -26,11 +26,9 @@ MyApp::Controller::Root - Root Controller for MyApp
 
 =cut
 
-sub default : Private {
+sub default : Path {
     my ( $self, $c ) = @_;
 
-    # Hello World
-    $c->response->body( $c->welcome_message );
 }
 
 =head2 end

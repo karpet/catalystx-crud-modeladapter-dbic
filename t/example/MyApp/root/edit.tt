@@ -22,7 +22,7 @@
  <h2>Related records</h2>
   [% PROCESS list.tt 
         fields = ['title', 'artist']
-        results = object.$related_method
+        rows     = object.$related_method
         base_uri = related_uri
   %]
 
