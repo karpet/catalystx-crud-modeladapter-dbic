@@ -48,6 +48,7 @@ sub build_form {
             label     => 'Song Length'
         }
     );
+    $self->SUPER::build_form(@_);
 }
 
 1;

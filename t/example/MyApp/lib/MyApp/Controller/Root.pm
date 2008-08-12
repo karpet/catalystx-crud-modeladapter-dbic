@@ -39,7 +39,24 @@ Attempt to render a view, if needed.
 
 =cut 
 
-sub end : ActionClass('RenderView') {}
+sub render_end : ActionClass('RenderView') {
+}
+
+sub end : Private {
+    my ( $self, $c ) = @_;
+    if ( @{ $c->error } ) {
+
+        $c->log->error($_) for @{ $c->error };
+
+        if ( grep {m/can't create new/} @{ $c->error } ) {
+            $c->error404;
+            $c->clear_errors;
+            return;
+        }
+
+    }
+    $c->forward('render_end');
+}
 
 =head1 AUTHOR
 

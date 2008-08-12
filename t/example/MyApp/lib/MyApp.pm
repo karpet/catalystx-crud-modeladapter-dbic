@@ -10,14 +10,14 @@ use Catalyst::Runtime '5.70';
 #         -Debug: activates the debug mode for very useful log messages
 #   ConfigLoader: will load the configuration from a YAML file in the
 #                 application's home directory
-# Static::Simple: will serve static files from the application's root 
+# Static::Simple: will serve static files from the application's root
 #                 directory
 
 use Catalyst qw/-Debug ConfigLoader Static::Simple/;
 
 our $VERSION = '0.01';
 
-# Configure the application. 
+# Configure the application.
 #
 # Note that settings in MyApp.yml (or other external
 # configuration file that you set up manually) take precedence
@@ -31,6 +31,12 @@ __PACKAGE__->config( name => 'MyApp' );
 # Start the application
 __PACKAGE__->setup;
 
+sub error404 {
+    my ($c) = @_;
+    $c->response->status(404);
+    $c->response->body("Sorry, resource not found");
+
+}
 
 =head1 NAME
 

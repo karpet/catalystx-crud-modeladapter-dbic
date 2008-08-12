@@ -41,6 +41,7 @@ sub build_form {
             maxlength => 128,
         },
     );
+    $self->SUPER::build_form(@_);
 }
 
 1;

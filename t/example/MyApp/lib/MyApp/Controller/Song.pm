@@ -1,8 +1,11 @@
 package MyApp::Controller::Song;
 use strict;
 use warnings;
-use base qw( CatalystX::CRUD::Controller::RHTMLO );
+use base qw( CatalystX::CRUD::REST CatalystX::CRUD::Controller::RHTMLO );
 use MyCRUD::Song::Form;
+use Class::C3;
+
+Class::C3::initialize();    # must do this in each controller??
 
 __PACKAGE__->config(
     form_class       => 'MyCRUD::Song::Form',
@@ -18,10 +21,5 @@ __PACKAGE__->config(
     primary_key           => 'id',
     view_on_single_result => 1,
 );
-
-sub default : Path {
-    my ( $self, $c ) = @_;
-    $c->response->redirect( $c->uri_for('list') );
-}
 
 1;
