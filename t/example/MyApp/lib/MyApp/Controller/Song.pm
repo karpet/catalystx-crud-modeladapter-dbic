@@ -5,8 +5,6 @@ use base qw( CatalystX::CRUD::REST CatalystX::CRUD::Controller::RHTMLO );
 use MyCRUD::Song::Form;
 use Class::C3;
 
-Class::C3::initialize();    # must do this in each controller??
-
 __PACKAGE__->config(
     form_class       => 'MyCRUD::Song::Form',
     init_form        => 'init_with_song',

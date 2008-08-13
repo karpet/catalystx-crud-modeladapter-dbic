@@ -31,6 +31,13 @@ __PACKAGE__->config( name => 'MyApp' );
 # Start the application
 __PACKAGE__->setup;
 
+# Class::C3 used by Controllers subclassing CatalystX::CRUD::Controller
+# so that multiple inheritance from ::REST controller works correctly.
+use Class::C3;
+
+# need to call this just once after setup() is done.
+Class::C3::initialize();
+
 sub error404 {
     my ($c) = @_;
     $c->response->status(404);
