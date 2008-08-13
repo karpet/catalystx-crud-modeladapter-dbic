@@ -3,7 +3,7 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 0.01    11 Aug 2008
         First version, released on an unsuspecting world.
 
-0.02    xxx
+0.02    12 Aug 2008
         * fix bug in order of params to make_query()
         * add example app in t/example/MyApp
 

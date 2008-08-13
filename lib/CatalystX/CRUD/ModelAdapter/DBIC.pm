@@ -5,7 +5,7 @@ use base qw( CatalystX::CRUD::ModelAdapter CatalystX::CRUD::Model::Utils );
 use Class::C3;
 use Scalar::Util qw( weaken );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
