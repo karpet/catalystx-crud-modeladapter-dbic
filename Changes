@@ -7,4 +7,9 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
         * fix bug in order of params to make_query()
         * add example app in t/example/MyApp
 
+0.03    xxx
+        * fix make_query() to return hash ref like 
+          other Models do.
+
+
 
