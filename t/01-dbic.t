@@ -1,7 +1,10 @@
-use Test::More tests => 13;
+use Test::More tests => 17;
 
 BEGIN {
     use lib qw( ../../CatalystX-CRUD/trunk/lib t );
+
+    $ENV{CATALYST_DEBUG} = $ENV{PERL_DEBUG} || 0;
+
     use_ok('CatalystX::CRUD::ModelAdapter::DBIC');
 
     system("cd t/ && $^X insertdb.pl") and die "can't create db: $!";
@@ -49,3 +52,25 @@ is( $res->content,
     '{ cd => 3, title => "Something New, Something Blue", trackid => 8 }',
     "POST new track"
 );
+
+# test *_related features
+
+ok( $res = request(
+        POST( '/crud/3/related/cds/1/add', [] ),
+        "/crud/3/related/multitracks/1/add"
+    )
+);
+
+is( $res->headers->{status}, 200, "POST returned OK" );
+
+#dump $res;
+
+ok( $res = request(
+        POST( '/crud/3/related/cds/1/remove', [] ),
+        "/crud/3/related/multitracks/1/remove"
+    )
+);
+
+is( $res->headers->{status}, 200, "POST returned OK" );
+
+#dump $res;

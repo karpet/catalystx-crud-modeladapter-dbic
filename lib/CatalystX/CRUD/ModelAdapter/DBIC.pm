@@ -4,6 +4,8 @@ use strict;
 use base qw( CatalystX::CRUD::ModelAdapter CatalystX::CRUD::Model::Utils );
 use Class::C3;
 use Scalar::Util qw( weaken );
+use Carp;
+use Data::Dump qw( dump );
 
 our $VERSION = '0.03';
 
@@ -211,6 +213,131 @@ sub count_related {
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     return $obj->$rel->count(@q);
+}
+
+=head2 add_related( I<controller>, I<context>, I<obj>, I<rel_name>, I<foreign_value> )
+
+Implements optional method as defined by core API. I<rel_name>
+should be a method name callable by I<obj>.
+
+=cut
+
+sub add_related {
+    my ( $self, $controller, $c, $obj, $rel, $for_val ) = @_;
+    my $rinfo = $self->_get_rel_meta( $controller, $c, $obj, $rel );
+
+    #carp dump $rinfo;
+    if ( !exists $rinfo->{class} ) {
+
+        # isa m2m
+        # must find the foreign object to pass to add_to_$rel()
+        my $for_obj
+            = $self->_get_m2m_foreign_object( $controller, $c, $obj, $rinfo,
+            $for_val );
+        my $add_method = $rinfo->{add_method};
+        $obj->$add_method($for_obj);
+    }
+    else {
+        croak "TODO o2m";
+    }
+}
+
+sub _get_m2m_foreign_object {
+    my ( $self, $controller, $c, $obj, $rinfo, $for_val ) = @_;
+    my $o2m_rel = $rinfo->{relation};
+    my $o2m_rinfo = $self->_get_rel_meta( $controller, $c, $obj, $o2m_rel );
+
+    #carp dump $o2m_rinfo;
+
+    my $map_class = $o2m_rinfo->{class};
+    my ( $for_class, $for_pk );
+    for my $for_rel ( $map_class->relationships ) {
+        my $for_rel_info = $map_class->relationship_info($for_rel);
+
+        #carp "for_rel: " . dump $for_rel_info;
+
+        # this is a FK in the map table but which one?
+        # we want the other side
+        if ( !$obj->isa( $for_rel_info->{class} ) ) {
+            $for_class = $for_rel_info->{class};
+            ($for_pk) = $for_class->primary_columns;    # TODO multiple?
+        }
+
+    }
+
+    #carp "for_class = $for_class";
+    #carp "for_pk    = $for_pk";
+
+    my $for_obj
+        = $c->model( $self->model_name )->resultset($for_class)
+        ->find( { $for_pk => $for_val } )
+        or $self->throw_error(
+        "can't add foreign object in $for_class for $for_val");
+
+    return $for_obj;
+}
+
+=head2 rm_related( I<controller>, I<context>, I<obj>, I<rel_name>, I<foreign_value> )
+
+Implements optional method as defined by core API. I<rel_name>
+should be a method name callable by I<obj>.
+
+=cut
+
+sub rm_related {
+    my ( $self, $controller, $c, $obj, $rel, $for_val ) = @_;
+    my $rinfo = $self->_get_rel_meta( $controller, $c, $obj, $rel );
+
+    #carp dump $rinfo;
+    if ( !exists $rinfo->{class} ) {
+
+        # isa m2m
+        # must find the foreign object to pass to remove_from_$rel()
+        my $for_obj
+            = $self->_get_m2m_foreign_object( $controller, $c, $obj, $rinfo,
+            $for_val );
+        my $rm_method = $rinfo->{remove_method};
+        $obj->$rm_method($for_obj);
+
+    }
+    else {
+        croak "TODO o2m";
+    }
+
+}
+
+=head2 has_relationship( I<controller>, I<context>, I<obj>, I<rel_name> )
+
+Implements optional method as defined by core API. I<rel_name>
+should be a method name callable by I<obj>.
+
+=cut
+
+sub has_relationship {
+    my ( $self, $controller, $c, $obj, $rel ) = @_;
+    if ( !$obj->can('_m2m_metadata') ) {
+        $self->throw_error(
+            "DBIx::Class::IntrospectableM2M not loaded for $obj");
+    }
+
+    #carp dump $obj;
+    #carp dump $obj->_m2m_metadata;
+
+    return $obj->_m2m_metadata->{$rel} if exists $obj->_m2m_metadata->{$rel};
+    for ( $obj->relationships ) {
+        return $obj->relationship_info($_)
+            if $_ eq $rel;    # has_relationship() does not work??
+    }
+    return;
+}
+
+sub _get_rel_meta {
+    my ( $self, $controller, $c, $obj, $rel ) = @_;
+    if ( !$self->has_relationship( $controller, $c, $obj, $rel ) ) {
+        $self->throw_error("no such relationship $rel defined for $obj");
+    }
+    return $self->has_relationship( $controller, $c, $obj, $rel )
+        || $obj->relationship_info($rel);
 }
 
 sub _get_field_names {
