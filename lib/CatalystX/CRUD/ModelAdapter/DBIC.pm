@@ -146,7 +146,7 @@ sub count {
         ->resultset( $self->_get_moniker( $controller, $c ) )->count(@q);
 }
 
-=head2 make_query( I<controller>, I<context>, I<field_names> )
+=head2 make_query( I<controller>, I<context> [, I<field_names> ] )
 
 Returns an array ref of query data based on request params in I<context>,
 using param names that match I<field_names>.
@@ -168,6 +168,49 @@ sub make_query {
     weaken( $self->{context} );
 
     return $self->make_sql_query($field_names) || {};
+}
+
+=head2 search_related( I<controller>, I<context>, I<obj>, I<relationship> [, I<query> ] )
+
+Implements required method. Returns array ref of
+objects related to I<obj> via I<relationship>. I<relationship>
+should be a method name callable on I<obj>.
+
+=head2 iterator_related( I<controller>, I<context>, I<obj>, I<relationship> [, I<query> ] )
+
+Like search_related() but returns an iterator.
+
+=head2 count_related( I<controller>, I<context>, I<obj>, I<relationship> [, I<query> ] )
+
+Like search_related() but returns an integer.
+
+=cut
+
+sub search_related {
+    my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
+    $query ||= $self->make_query( $controller, $c );
+    my @q = ( $query->{query} );
+    push( @q, $controller->model_meta->{resultset_opts} )
+        if $controller->model_meta->{resultset_opts};
+    return [ $obj->$rel->search(@q) ];
+}
+
+sub iterator_related {
+    my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
+    $query ||= $self->make_query( $controller, $c );
+    my @q = ( $query->{query} );
+    push( @q, $controller->model_meta->{resultset_opts} )
+        if $controller->model_meta->{resultset_opts};
+    return scalar $obj->$rel->search(@q);
+}
+
+sub count_related {
+    my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
+    $query ||= $self->make_query( $controller, $c );
+    my @q = ( $query->{query} );
+    push( @q, $controller->model_meta->{resultset_opts} )
+        if $controller->model_meta->{resultset_opts};
+    return $obj->$rel->count(@q);
 }
 
 sub _get_field_names {
