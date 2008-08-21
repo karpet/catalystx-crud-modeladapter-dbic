@@ -272,7 +272,7 @@ sub _get_m2m_foreign_object {
         = $c->model( $self->model_name )->resultset($for_class)
         ->find( { $for_pk => $for_val } )
         or $self->throw_error(
-        "can't add foreign object in $for_class for $for_val");
+        "can't find foreign object in $for_class for $for_val");
 
     return $for_obj;
 }
