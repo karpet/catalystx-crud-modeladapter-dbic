@@ -97,7 +97,8 @@ on calling context, for a search() in resultset() for I<args>.
 sub search {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
-    my @q = ( $query->{query} );
+    my @q;
+    push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     my @rs = $c->model( $self->model_name )
@@ -124,7 +125,8 @@ for a search() in resultset() for I<args>.
 sub iterator {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
-    my @q = ( $query->{query} );
+    my @q;
+    push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     my $rs = $c->model( $self->model_name )
@@ -141,7 +143,8 @@ Implements required method. Returns count() in resultset() for I<args>.
 sub count {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
-    my @q = ( $query->{query} );
+    my @q;
+    push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     return $c->model( $self->model_name )
@@ -191,7 +194,8 @@ Like search_related() but returns an integer.
 sub search_related {
     my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
     $query ||= $self->make_query( $controller, $c );
-    my @q = ( $query->{query} );
+    my @q;
+    push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     return [ $obj->$rel->search(@q) ];
@@ -200,7 +204,8 @@ sub search_related {
 sub iterator_related {
     my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
     $query ||= $self->make_query( $controller, $c );
-    my @q = ( $query->{query} );
+    my @q;
+    push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     return scalar $obj->$rel->search(@q);
@@ -209,7 +214,8 @@ sub iterator_related {
 sub count_related {
     my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
     $query ||= $self->make_query( $controller, $c );
-    my @q = ( $query->{query} );
+    my @q;
+    push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
     return $obj->$rel->count(@q);

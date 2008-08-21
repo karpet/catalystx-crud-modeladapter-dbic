@@ -14,6 +14,7 @@ WriteMakefile(
         'CatalystX::CRUD'               => 0.28,
         'DBIx::Class'                   => 0,
         'Catalyst::Model::DBIC::Schema' => 0,
+        'DBIx::Class::IntrospectableM2M' => 0,
     },
     dist => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'CatalystX-CRUD-ModelAdapter-DBIC-*' },
