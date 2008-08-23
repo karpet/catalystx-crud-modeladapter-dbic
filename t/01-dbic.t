@@ -56,21 +56,21 @@ is( $res->content,
 # test *_related features
 
 ok( $res = request(
-        POST( '/crud/3/related/cds/1/add', [] ),
-        "/crud/3/related/multitracks/1/add"
+        POST( '/crud/3/cds/1/add', [] ),
+        "/crud/3/multitracks/1/add"
     )
 );
 
-is( $res->headers->{status}, 200, "POST returned OK" );
+is( $res->headers->{status}, 204, "POST returned OK" );
 
 #dump $res;
 
 ok( $res = request(
-        POST( '/crud/3/related/cds/1/remove', [] ),
-        "/crud/3/related/multitracks/1/remove"
+        POST( '/crud/3/cds/1/remove', [] ),
+        "/crud/3/multitracks/1/remove"
     )
 );
 
-is( $res->headers->{status}, 200, "POST returned OK" );
+is( $res->headers->{status}, 204, "POST returned OK" );
 
 #dump $res;
