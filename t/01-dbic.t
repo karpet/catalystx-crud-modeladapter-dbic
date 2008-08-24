@@ -3,7 +3,7 @@ use Test::More tests => 17;
 BEGIN {
     use lib qw( ../../CatalystX-CRUD/trunk/lib t );
 
-    $ENV{CATALYST_DEBUG} = $ENV{PERL_DEBUG} || 0;
+    $ENV{CATALYST_DEBUG} ||= 0;
 
     use_ok('CatalystX::CRUD::ModelAdapter::DBIC');
 
@@ -31,15 +31,13 @@ ok( $res = request( HTTP::Request->new( GET => '/crud/1/view' ) ),
     "GET view" );
 
 #diag( $res->content );
-is( $res->content, '{ cd => 3, title => "Beat It", trackid => 1 }',
-    "GET track 1" );
+is( $res->content, '{ title => "Beat It", trackid => 1 }', "GET track 1" );
 
 # create
 ok( $res = request(
         POST(
             '/crud/0/save',
-            [   cd      => 3,
-                title   => 'Something New, Something Blue',
+            [   title   => 'Something New, Something Blue',
                 trackid => 0
             ]
         )
@@ -49,16 +47,13 @@ ok( $res = request(
 
 #diag( $res->content );
 is( $res->content,
-    '{ cd => 3, title => "Something New, Something Blue", trackid => 8 }',
+    '{ title => "Something New, Something Blue", trackid => 8 }',
     "POST new track"
 );
 
 # test *_related features
 
-ok( $res = request(
-        POST( '/crud/3/cds/1/add', [] ),
-        "/crud/3/multitracks/1/add"
-    )
+ok( $res = request( POST( '/crud/3/cds/1/add', [] ), "/crud/3/tracks/1/add" )
 );
 
 is( $res->headers->{status}, 204, "POST returned OK" );
@@ -67,7 +62,7 @@ is( $res->headers->{status}, 204, "POST returned OK" );
 
 ok( $res = request(
         POST( '/crud/3/cds/1/remove', [] ),
-        "/crud/3/multitracks/1/remove"
+        "/crud/3/tracks/1/remove"
     )
 );
 

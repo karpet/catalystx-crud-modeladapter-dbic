@@ -8,7 +8,7 @@ use MyForm;
 
 __PACKAGE__->config(
     form_class       => 'MyForm',
-    form_fields      => [qw( title cd trackid )],
+    form_fields      => [qw( title trackid )],
     init_form        => 'init_with_track',
     init_object      => 'track_from_form',
     default_template => 'no/such/file',
@@ -17,8 +17,8 @@ __PACKAGE__->config(
     model_meta       => {
         dbic_schema    => 'Track',
         resultset_opts => {
-            join     => [qw/ cd /],
-            prefetch => [qw/ cd /]
+            join     => { track_cds => 'cd' },
+            prefetch => { track_cds => 'cd' }
         }
     },
     primary_key           => 'trackid',
@@ -50,7 +50,13 @@ sub test2 : Local {
 
     my $rs = $self->do_model( $c, 'iterator' );
     while ( my $track = $rs->next ) {
-        #$self->serialize_object( $c, $track );
+
+        #        $self->serialize_object( $c, $track );
+        #        warn sprintf(
+        #            "cd title = %s  cd id = %d\n",
+        #            $track->cds->first->title,
+        #            $track->cds->first->cdid
+        #        );
         $count++;
     }
 
@@ -64,6 +70,7 @@ sub test3 : Local {
     my $count = 0;
     my @results = $self->do_model( $c, 'search' );
     for my $r (@results) {
+
         #$self->serialize_object( $c, $r );
         $count++;
     }

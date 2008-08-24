@@ -28,7 +28,6 @@ $dbh->do(
     qq{
 CREATE TABLE track (
     trackid INTEGER PRIMARY KEY AUTOINCREMENT,
-    cd INTEGER NOT NULL REFERENCES cd(cdid),
     title TEXT NOT NULL
   );
 }
@@ -76,11 +75,16 @@ my %tracks = (
     'The Way I Am'    => 'The Marshall Mathers LP',
 );
 
+$schema->populate( 'Track', [ ['title'], map { [$_] } sort keys %tracks ] );
+
 my @tracks;
-foreach my $track ( sort keys %tracks ) {
-    my $cdname
-        = $schema->resultset('Cd')->search( { title => $tracks{$track}, } );
-    push @tracks, [ $cdname->first, $track ];
+foreach my $track_title ( sort keys %tracks ) {
+    my $cdid = $schema->resultset('Cd')
+        ->search( { title => $tracks{$track_title}, } )->first->cdid;
+    my $trackid
+        = $schema->resultset('Track')->find( { title => $track_title } )
+        ->trackid;
+    push @tracks, [ $cdid, $trackid ];
 }
 
-$schema->populate( 'Track', [ [qw/cd title/], @tracks, ] );
+$schema->populate( 'CdTrackJoin', [ [qw/cdid trackid/], @tracks, ] );

@@ -18,6 +18,7 @@ t/MyDB/Main.pm
 t/MyDB/Main/Artist.pm
 t/MyDB/Main/Cd.pm
 t/MyDB/Main/Track.pm
+t/MyDB/Main/CdTrackJoin.pm
 t/example/MyApp/Changes
 t/example/MyApp/lib/MyApp.pm
 t/example/MyApp/lib/MyApp/Controller/Album.pm

@@ -7,9 +7,16 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
         * fix bug in order of params to make_query()
         * add example app in t/example/MyApp
 
-0.03    xxx
+0.03    23 Aug 2008
         * fix make_query() to return hash ref like 
           other Models do.
+        * updates for new core API in 0.29
+
+0.04    24 Aug 2008
+        * switch to DBIx::Class::RDBOHelpers for rel introspection.
+
+
+
 
 
 

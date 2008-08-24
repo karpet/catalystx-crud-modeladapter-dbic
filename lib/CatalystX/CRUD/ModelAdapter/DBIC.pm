@@ -1,13 +1,16 @@
 package CatalystX::CRUD::ModelAdapter::DBIC;
 use warnings;
 use strict;
-use base qw( CatalystX::CRUD::ModelAdapter CatalystX::CRUD::Model::Utils );
+use base qw(
+    CatalystX::CRUD::ModelAdapter
+    CatalystX::CRUD::Model::Utils
+);
 use Class::C3;
 use Scalar::Util qw( weaken );
 use Carp;
 use Data::Dump qw( dump );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
@@ -129,6 +132,9 @@ sub iterator {
     push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
+
+    #warn "query: " . dump \@q;
+
     my $rs = $c->model( $self->model_name )
         ->resultset( $self->_get_moniker( $controller, $c ) )->search(@q);
     return $rs;
@@ -208,6 +214,8 @@ sub iterator_related {
     push( @q, { @{ $query->{query} } } );
     push( @q, $controller->model_meta->{resultset_opts} )
         if $controller->model_meta->{resultset_opts};
+
+    #warn "query: " . dump \@q;
     return scalar $obj->$rel->search(@q);
 }
 
@@ -232,15 +240,13 @@ sub add_related {
     my ( $self, $controller, $c, $obj, $rel, $for_val ) = @_;
     my $rinfo = $self->_get_rel_meta( $controller, $c, $obj, $rel );
 
-    #carp dump $rinfo;
-    if ( !exists $rinfo->{class} ) {
+    #carp "add_related: " . dump $rinfo;
 
-        # isa m2m
-        # must find the foreign object to pass to add_to_$rel()
+    if ( exists $rinfo->{m2m} ) {
         my $for_obj
-            = $self->_get_m2m_foreign_object( $controller, $c, $obj, $rinfo,
-            $for_val );
-        my $add_method = $rinfo->{add_method};
+            = $self->_get_m2m_foreign_object( $controller, $c, $obj, $rel,
+            $rinfo, $for_val );
+        my $add_method = 'add_to_' . $rinfo->{m2m}->{method_name};
         $obj->$add_method($for_obj);
     }
     else {
@@ -249,36 +255,21 @@ sub add_related {
 }
 
 sub _get_m2m_foreign_object {
-    my ( $self, $controller, $c, $obj, $rinfo, $for_val ) = @_;
-    my $o2m_rel = $rinfo->{relation};
-    my $o2m_rinfo = $self->_get_rel_meta( $controller, $c, $obj, $o2m_rel );
-
-    #carp dump $o2m_rinfo;
-
-    my $map_class = $o2m_rinfo->{class};
-    my ( $for_class, $for_pk );
-    for my $for_rel ( $map_class->relationships ) {
-        my $for_rel_info = $map_class->relationship_info($for_rel);
-
-        #carp "for_rel: " . dump $for_rel_info;
-
-        # this is a FK in the map table but which one?
-        # we want the other side
-        if ( !$obj->isa( $for_rel_info->{class} ) ) {
-            $for_class = $for_rel_info->{class};
-            ($for_pk) = $for_class->primary_columns;    # TODO multiple?
-        }
-
+    my ( $self, $controller, $c, $obj, $rel, $rinfo, $for_val ) = @_;
+    if ( !exists $rinfo->{m2m} ) {
+        $self->throw_error("relationship $rel is not a many-to-many");
     }
 
-    #carp "for_class = $for_class";
-    #carp "for_pk    = $for_pk";
+    #carp "get foreign object for $rel : " . dump $rinfo;
 
+    my $m2m           = $rinfo->{m2m};
+    my $foreign_class = $m2m->{foreign_class};
+    my $fpk           = $m2m->{foreign_column};
     my $for_obj
-        = $c->model( $self->model_name )->resultset($for_class)
-        ->find( { $for_pk => $for_val } )
+        = $c->model( $self->model_name )->resultset($foreign_class)
+        ->find( { $fpk => $for_val } )
         or $self->throw_error(
-        "can't find foreign object in $for_class for $for_val");
+        "can't find foreign object in $foreign_class for $for_val");
 
     return $for_obj;
 }
@@ -295,14 +286,14 @@ sub rm_related {
     my $rinfo = $self->_get_rel_meta( $controller, $c, $obj, $rel );
 
     #carp dump $rinfo;
-    if ( !exists $rinfo->{class} ) {
+    if ( exists $rinfo->{m2m} ) {
 
         # isa m2m
         # must find the foreign object to pass to remove_from_$rel()
         my $for_obj
-            = $self->_get_m2m_foreign_object( $controller, $c, $obj, $rinfo,
-            $for_val );
-        my $rm_method = $rinfo->{remove_method};
+            = $self->_get_m2m_foreign_object( $controller, $c, $obj, $rel,
+            $rinfo, $for_val );
+        my $rm_method = 'remove_from_' . $rinfo->{m2m}->{method_name};
         $obj->$rm_method($for_obj);
 
     }
@@ -321,18 +312,20 @@ should be a method name callable by I<obj>.
 
 sub has_relationship {
     my ( $self, $controller, $c, $obj, $rel ) = @_;
-    if ( !$obj->can('_m2m_metadata') ) {
-        $self->throw_error(
-            "DBIx::Class::IntrospectableM2M not loaded for $obj");
+    eval { $obj->ensure_class_loaded('DBIx::Class::RDBOHelpers'); };
+    if ($@) {
+        $self->throw_error("DBIx::Class::RDBOHelpers not loaded for $obj");
     }
 
-    #carp dump $obj;
-    #carp dump $obj->_m2m_metadata;
-
-    return $obj->_m2m_metadata->{$rel} if exists $obj->_m2m_metadata->{$rel};
     for ( $obj->relationships ) {
         return $obj->relationship_info($_)
-            if $_ eq $rel;    # has_relationship() does not work??
+            if $_ eq $rel;
+
+        # m2m relationships are not keyed by their method name
+        my $info = $obj->relationship_info($_);
+        if ( exists $info->{m2m} and $info->{m2m}->{method_name} eq $rel ) {
+            return $info;
+        }
     }
     return;
 }
@@ -350,25 +343,40 @@ sub _get_field_names {
     my $self       = shift;
     my $controller = shift;
     my $c          = shift;
-    return $self->{_field_names} if $self->{_field_names};
 
-    my $obj = $c->model( $self->model_name )
-        ->composed_schema->source( $self->_get_moniker( $controller, $c ) );
+    my $moniker = $self->_get_moniker( $controller, $c );
+    return $self->{_field_names}->{$moniker}
+        if exists $self->{_field_names}->{$moniker};
+
+    my $obj
+        = $c->model( $self->model_name )->composed_schema->class($moniker);
     my @cols = $obj->columns;
     my @rels = $obj->relationships;
 
     my @fields;
     for my $rel (@rels) {
-        my $info      = $obj->relationship_info($rel);
-        my $rel_class = $info->{source};
-        my @rel_cols  = $rel_class->columns;
-        push( @fields, map { $rel . '.' . $_ } @rel_cols );
+        my $info = $self->_get_rel_meta( $controller, $c, $obj, $rel );
+        my ( $rel_class, $prefix );
+
+        #warn "rel info for $moniker $rel: " . dump $info;
+        if ( exists $info->{m2m} ) {
+            $rel_class = $info->{m2m}->{foreign_class};
+            $prefix    = $info->{m2m}->{map_to};
+        }
+        else {
+            $rel_class = $info->{class};
+            $prefix    = $rel;
+        }
+        my @rel_cols = $rel_class->columns;
+        push( @fields, map { $prefix . '.' . $_ } @rel_cols );
     }
     for my $col (@cols) {
         push( @fields, 'me.' . $col );
     }
 
-    $self->{_field_names} = \@fields;
+    #carp "field_names for $moniker : " . dump \@fields;
+
+    $self->{_field_names}->{$moniker} = \@fields;
 
     return \@fields;
 }

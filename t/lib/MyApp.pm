@@ -32,12 +32,8 @@ sub get_tracks_by_cd {
     my $schema  = shift;
     my $count   = shift;
     my $cdtitle = shift;
-    my $rs      = $schema->resultset('Track')->search(
-        { 'cd.title' => $cdtitle },
-        {   join     => [qw/ cd /],
-            prefetch => [qw/ cd /]
-        }
-    );
+    my $rs
+        = $schema->resultset('Cd')->find( { 'title' => $cdtitle }, )->tracks;
     while ( my $track = $rs->next ) {
         $$count++;
     }
@@ -48,12 +44,13 @@ sub get_tracks_by_artist {
     my $schema     = shift;
     my $count      = shift;
     my $artistname = shift;
-    my $rs         = $schema->resultset('Track')->search(
-        { 'artist.name' => $artistname },
-        { join          => { 'cd' => 'artist' }, }
-    );
-    while ( my $track = $rs->next ) {
-        $$count++;
+    my $rs = $schema->resultset('Artist')->find( { 'name' => $artistname }, )
+        ->cds;
+    while ( my $cd = $rs->next ) {
+        my $tracks = $cd->tracks;
+        while ( my $track = $tracks->next ) {
+            $$count++;
+        }
     }
 
 }
@@ -63,10 +60,8 @@ sub get_cd_by_track {
     my $count      = shift;
     my $tracktitle = shift;
 
-    my $rs
-        = $schema->resultset('Cd')->search( { 'tracks.title' => $tracktitle },
-        { join => [qw/ tracks /], } );
-    my $cd = $rs->first;
+    my $rs = $schema->resultset('Track')->find( { 'title' => $tracktitle } );
+    my $cd = $rs->cds->first;
     $$count++;
 }
 
@@ -92,11 +87,8 @@ sub get_artist_by_track {
     my $count      = shift;
     my $tracktitle = shift;
 
-    my $rs = $schema->resultset('Artist')->search(
-        { 'tracks.title' => $tracktitle },
-        { join           => { 'cds' => 'tracks' } }
-    );
-    my $artist = $rs->first;
+    my $rs = $schema->resultset('Track')->find( { 'title' => $tracktitle } );
+    my $artist = $rs->cds->first->artist;
     $$count++;
 }
 
