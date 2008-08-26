@@ -260,7 +260,7 @@ sub _get_m2m_foreign_object {
         $self->throw_error("relationship $rel is not a many-to-many");
     }
 
-    #carp "get foreign object for $rel : " . dump $rinfo;
+    #carp "get foreign object $for_val for $rel : " . dump $rinfo;
 
     my $m2m           = $rinfo->{m2m};
     my $foreign_class = $m2m->{foreign_class};
