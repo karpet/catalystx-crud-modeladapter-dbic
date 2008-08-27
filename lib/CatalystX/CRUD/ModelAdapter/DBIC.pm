@@ -10,7 +10,7 @@ use Scalar::Util qw( weaken );
 use Carp;
 use Data::Dump qw( dump );
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 NAME
 
@@ -100,12 +100,10 @@ on calling context, for a search() in resultset() for I<args>.
 sub search {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
-    my @q;
-    push( @q, { @{ $query->{query} } } );
-    push( @q, $controller->model_meta->{resultset_opts} )
-        if $controller->model_meta->{resultset_opts};
-    my @rs = $c->model( $self->model_name )
-        ->resultset( $self->_get_moniker( $controller, $c ) )->search(@q);
+    my @rs
+        = $c->model( $self->model_name )
+        ->resultset( $self->_get_moniker( $controller, $c ) )
+        ->search( $query->{WHERE}, $query->{OPTS} );
     return wantarray ? @rs : \@rs;
 }
 
@@ -128,15 +126,10 @@ for a search() in resultset() for I<args>.
 sub iterator {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
-    my @q;
-    push( @q, { @{ $query->{query} } } );
-    push( @q, $controller->model_meta->{resultset_opts} )
-        if $controller->model_meta->{resultset_opts};
-
-    #warn "query: " . dump \@q;
-
-    my $rs = $c->model( $self->model_name )
-        ->resultset( $self->_get_moniker( $controller, $c ) )->search(@q);
+    my $rs
+        = $c->model( $self->model_name )
+        ->resultset( $self->_get_moniker( $controller, $c ) )
+        ->search( $query->{WHERE}, $query->{OPTS} );
     return $rs;
 }
 
@@ -149,12 +142,9 @@ Implements required method. Returns count() in resultset() for I<args>.
 sub count {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
-    my @q;
-    push( @q, { @{ $query->{query} } } );
-    push( @q, $controller->model_meta->{resultset_opts} )
-        if $controller->model_meta->{resultset_opts};
     return $c->model( $self->model_name )
-        ->resultset( $self->_get_moniker( $controller, $c ) )->count(@q);
+        ->resultset( $self->_get_moniker( $controller, $c ) )
+        ->count( $query->{WHERE}, $query->{OPTS} );
 }
 
 =head2 make_query( I<controller>, I<context> [, I<field_names> ] )
@@ -171,14 +161,56 @@ sub make_query {
     my $field_names = shift
         || $self->_get_field_names( $controller, $c );
 
-    # TODO sort order and limit/offset support
-    # it's already in $q but need DBIC syntax
+    my $query = $self->make_sql_query( $controller, $c, $field_names ) || {};
+
+    my %dbic = ( query => $query );
+
+    # WHERE
+    $dbic{WHERE} = { @{ $query->{query} } };
+
+    my %opts;
+
+    # PREFETCH, etc.
+    if ( $controller->model_meta->{resultset_opts} ) {
+        %opts = %{ $controller->model_meta->{resultset_opts} };
+    }
+
+    # ORDER BY
+    if ( exists $query->{order_by} ) {
+        $opts{order_by} ||= $query->{order_by};
+    }
+
+    $dbic{OPTS} = \%opts;
+
+    #carp "query: " . dump \%dbic;
+
+    return \%dbic;
+}
+
+=head2 make_sql_query( I<controller>, I<context>, I<field_names> )
+
+Override method in CatalystX::CRUD::Model::Utils to mimic
+ACCEPT_CONTEXT by setting I<context> in $self. 
+
+Otherwise, acts just like CatalystX::CRUD::Model::Utils->make_sql_query().
+
+=cut
+
+sub make_sql_query {
+    my $self        = shift;
+    my $controller  = shift;
+    my $c           = shift;
+    my $field_names = shift;
 
     # Model::Utils (make_sql_query) assumes ACCEPT_CONTEXT accessor
     $self->{context} = $c;
     weaken( $self->{context} );
 
-    return $self->make_sql_query($field_names) || {};
+    my $q = $self->next::method($field_names);
+
+    #carp "make_sql_query : " . dump $q;
+
+    return $q;
 }
 
 =head2 search_related( I<controller>, I<context>, I<obj>, I<relationship> [, I<query> ] )
@@ -200,33 +232,19 @@ Like search_related() but returns an integer.
 sub search_related {
     my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
     $query ||= $self->make_query( $controller, $c );
-    my @q;
-    push( @q, { @{ $query->{query} } } );
-    push( @q, $controller->model_meta->{resultset_opts} )
-        if $controller->model_meta->{resultset_opts};
-    return [ $obj->$rel->search(@q) ];
+    return [ $obj->$rel->search( $query->{WHERE}, $query->{OPTS} ) ];
 }
 
 sub iterator_related {
     my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
     $query ||= $self->make_query( $controller, $c );
-    my @q;
-    push( @q, { @{ $query->{query} } } );
-    push( @q, $controller->model_meta->{resultset_opts} )
-        if $controller->model_meta->{resultset_opts};
-
-    #warn "query: " . dump \@q;
-    return scalar $obj->$rel->search(@q);
+    return scalar $obj->$rel->search( $query->{WHERE}, $query->{OPTS} );
 }
 
 sub count_related {
     my ( $self, $controller, $c, $obj, $rel, $query ) = @_;
     $query ||= $self->make_query( $controller, $c );
-    my @q;
-    push( @q, { @{ $query->{query} } } );
-    push( @q, $controller->model_meta->{resultset_opts} )
-        if $controller->model_meta->{resultset_opts};
-    return $obj->$rel->count(@q);
+    return $obj->$rel->count( $query->{WHERE}, $query->{OPTS} );
 }
 
 =head2 add_related( I<controller>, I<context>, I<obj>, I<rel_name>, I<foreign_value> )

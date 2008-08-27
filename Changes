@@ -15,6 +15,8 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 0.04    24 Aug 2008
         * switch to DBIx::Class::RDBOHelpers for rel introspection.
 
+0.05    26 Aug 2008
+        * fix ORDER BY feature and override make_sql_query()
 
 
 

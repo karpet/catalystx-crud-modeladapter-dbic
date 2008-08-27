@@ -38,7 +38,7 @@ ok( $res = request(
         POST(
             '/crud/0/save',
             [   title   => 'Something New, Something Blue',
-                trackid => 0
+                trackid => 8
             ]
         )
     ),
