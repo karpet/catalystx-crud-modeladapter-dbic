@@ -10,7 +10,7 @@ use Scalar::Util qw( weaken );
 use Carp;
 use Data::Dump qw( dump );
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 NAME
 
@@ -163,10 +163,8 @@ sub make_query {
 
     my $query = $self->make_sql_query( $controller, $c, $field_names ) || {};
 
-    my %dbic = ( query => $query );
-
     # WHERE
-    $dbic{WHERE} = { @{ $query->{query} } };
+    $query->{WHERE} = { @{ $query->{query} } };
 
     my %opts;
 
@@ -180,11 +178,11 @@ sub make_query {
         $opts{order_by} ||= $query->{order_by};
     }
 
-    $dbic{OPTS} = \%opts;
+    $query->{OPTS} = \%opts;
 
-    #carp "query: " . dump \%dbic;
+    #carp "query: " . dump $query;
 
-    return \%dbic;
+    return $query;
 }
 
 =head2 make_sql_query( I<controller>, I<context>, I<field_names> )

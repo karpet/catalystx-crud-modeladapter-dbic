@@ -18,7 +18,5 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 0.05    26 Aug 2008
         * fix ORDER BY feature and override make_sql_query()
 
-
-
-
-
+0.06    27 Aug 2008
+        * tweek make_query() to return hash struct like RDBO does
