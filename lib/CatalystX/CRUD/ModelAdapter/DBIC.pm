@@ -10,7 +10,9 @@ use Scalar::Util qw( weaken );
 use Carp;
 use Data::Dump qw( dump );
 
-our $VERSION = '0.06';
+__PACKAGE__->mk_ro_accessors(qw( treat_like_int ));
+
+our $VERSION = '0.07';
 
 =head1 NAME
 
@@ -35,10 +37,61 @@ CatalystX::CRUD::ModelAdapter::DBIC - CRUD for Catalyst::Model::DBIC::Schema
 =head1 DESCRIPTION
 
 
+
 =head1 METHODS
 
+=head2 new( I<opts> )
+
+Overrides base method to initialize treats_like_int, ne_sign and 
+use_ilike values.
 
 =cut
+
+sub new {
+    my $self = shift->next::method(@_);
+
+    # what kind of db driver are we using.
+    # makes a difference in make_sql_query().
+    my $db_type
+        = $self->app_class->model( $self->model_name )->storage->sqlt_type;
+
+    #warn "DBIC driver: " . $db_type;
+
+    # TODO others?
+    $self->use_ilike(1) if $db_type eq 'PostgreSQL';
+
+    # SQL for not equal
+    $self->ne_sign('!=');
+
+    # cache the treat_like_int hash
+    $self->_treat_like_int;
+
+    return $self;
+}
+
+sub _treat_like_int {
+    my $self     = shift;
+    my $treat    = {};
+    my $moniker  = $self->_get_moniker;
+    my $rs_class = $self->app_class->model( $self->model_name )
+        ->composed_schema->class($moniker);
+    for my $col ( $rs_class->columns ) {
+        my $info = $rs_class->column_info($col);
+
+        #warn "$col : " . dump($info);
+
+        if ( keys %$info ) {
+            if (    $info->{data_type}
+                and $info->{data_type} =~ m/(boolean|date|int)/ )
+            {
+                $treat->{$col} = 1;
+            }
+        }
+
+    }
+
+    $self->{treat_like_int} = $treat;
+}
 
 =head2 new_object( I<controller>, I<context>, I<moniker> )
 
@@ -51,7 +104,7 @@ sub new_object {
     my $self       = shift;
     my $controller = shift;
     my $c          = shift;
-    my $moniker    = $self->_get_moniker( $controller, $c );
+    my $moniker    = $self->_get_moniker($c);
     return $c->model( $self->model_name )->resultset($moniker)
         ->new_result( {} );
 }
@@ -68,7 +121,7 @@ sub fetch {
     my $self       = shift;
     my $controller = shift;
     my $c          = shift;
-    my $moniker    = $self->_get_moniker( $controller, $c );
+    my $moniker    = $self->_get_moniker($c);
     if (@_) {
         my $dbic_obj;
         eval {
@@ -101,18 +154,26 @@ sub search {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
     my @rs
-        = $c->model( $self->model_name )
-        ->resultset( $self->_get_moniker( $controller, $c ) )
+        = $c->model( $self->model_name )->resultset( $self->_get_moniker($c) )
         ->search( $query->{WHERE}, $query->{OPTS} );
     return wantarray ? @rs : \@rs;
 }
 
 sub _get_moniker {
-    my ( $self, $controller, $c ) = @_;
-    my $moniker = $c->stash->{dbic_schema}
-        || $controller->model_meta->{dbic_schema}
-        or $self->throw_error(
-        "must define a dbic_schema for each CRUD controller");
+    my ( $self, $c ) = @_;
+    my $moniker;
+    if ( defined $c ) {
+        $moniker = $c->stash->{dbic_schema}
+            || $self->model_meta->{dbic_schema};
+    }
+    else {
+        $moniker = $self->model_meta->{dbic_schema};
+    }
+    unless ($moniker) {
+        $self->throw_error(
+            "must define a dbic_schema in model_meta config for each CRUD controller"
+        );
+    }
     return $moniker;
 }
 
@@ -127,8 +188,7 @@ sub iterator {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
     my $rs
-        = $c->model( $self->model_name )
-        ->resultset( $self->_get_moniker( $controller, $c ) )
+        = $c->model( $self->model_name )->resultset( $self->_get_moniker($c) )
         ->search( $query->{WHERE}, $query->{OPTS} );
     return $rs;
 }
@@ -143,7 +203,7 @@ sub count {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
     return $c->model( $self->model_name )
-        ->resultset( $self->_get_moniker( $controller, $c ) )
+        ->resultset( $self->_get_moniker($c) )
         ->count( $query->{WHERE}, $query->{OPTS} );
 }
 
@@ -360,9 +420,9 @@ sub _get_field_names {
     my $controller = shift;
     my $c          = shift;
 
-    my $moniker = $self->_get_moniker( $controller, $c );
-    return $self->{_field_names}->{$moniker}
-        if exists $self->{_field_names}->{$moniker};
+    my $moniker = $self->_get_moniker($c);
+    return $self->{_field_names}
+        if exists $self->{_field_names};
 
     my $obj
         = $c->model( $self->model_name )->composed_schema->class($moniker);
@@ -392,7 +452,7 @@ sub _get_field_names {
 
     #carp "field_names for $moniker : " . dump \@fields;
 
-    $self->{_field_names}->{$moniker} = \@fields;
+    $self->{_field_names} = \@fields;
 
     return \@fields;
 }
@@ -416,7 +476,7 @@ Calls find() on I<dbic_object>.
 
 sub read {
     my ( $self, $c, $object ) = @_;
-    $object->find;    # TODO is this right?
+    $object->find;    # TODO is this right? what about discard_changes()?
 }
 
 =head2 update( I<context>, I<dbic_object> )
@@ -428,7 +488,6 @@ Calls update() on I<dbic_object>.
 sub update {
     my ( $self, $c, $object ) = @_;
     $object->update;
-
 }
 
 =head2 delete( I<context>, I<dbic_object> )
