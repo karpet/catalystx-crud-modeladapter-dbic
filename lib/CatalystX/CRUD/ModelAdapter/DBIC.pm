@@ -47,6 +47,12 @@ use_ilike values.
 
 =cut
 
+# TODO others?
+my %is_iliker = (
+    Pg         => 1,
+    PostgreSQL => 1,
+);
+
 sub new {
     my $self = shift->next::method(@_);
 
@@ -57,14 +63,15 @@ sub new {
 
     #warn "DBIC driver: " . $db_type;
 
-    # TODO others?
-    $self->use_ilike(1) if $db_type eq 'PostgreSQL';
+    $self->use_ilike( exists $is_iliker{$db_type} );
 
     # SQL for not equal
     $self->ne_sign('!=');
 
     # cache the treat_like_int hash
     $self->_treat_like_int;
+
+    #warn dump $self;
 
     return $self;
 }
@@ -240,7 +247,7 @@ sub make_query {
 
     $query->{OPTS} = \%opts;
 
-    #carp "query: " . dump $query;
+    carp "query: " . dump $query;
 
     return $query;
 }
@@ -265,6 +272,14 @@ sub make_sql_query {
     weaken( $self->{context} );
 
     my $q = $self->next::method($field_names);
+
+    if ( $q->{query}->[0] eq 'or' ) {
+        $q->{query}->[0] = '-or';
+    }
+
+    if ( $q->{query}->[0] eq 'and' ) {
+        $q->{query}->[0] = '-and';
+    }
 
     #carp "make_sql_query : " . dump $q;
 

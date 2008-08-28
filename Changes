@@ -23,5 +23,6 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 
 0.07    xxx
         * implement Utils features for ne_sign() use_ilike() and treat_like_int()
+        * tweek make_sql_query() output to match DBIC syntax for -or and -and searches
 
 
