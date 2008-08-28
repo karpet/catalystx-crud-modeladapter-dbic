@@ -247,7 +247,7 @@ sub make_query {
 
     $query->{OPTS} = \%opts;
 
-    carp "query: " . dump $query;
+    #carp "query: " . dump $query;
 
     return $query;
 }
