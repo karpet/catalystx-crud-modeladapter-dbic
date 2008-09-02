@@ -273,12 +273,15 @@ sub make_sql_query {
 
     my $q = $self->next::method($field_names);
 
-    if ( $q->{query}->[0] eq 'or' ) {
-        $q->{query}->[0] = '-or';
-    }
+    #carp "make_sql_query : " . dump $q;
 
-    if ( $q->{query}->[0] eq 'and' ) {
-        $q->{query}->[0] = '-and';
+    if ( defined $q->{query}->[0] ) {
+        if ( $q->{query}->[0] eq 'or' ) {
+            $q->{query}->[0] = '-or';
+        }
+        elsif ( $q->{query}->[0] eq 'and' ) {
+            $q->{query}->[0] = '-and';
+        }
     }
 
     #carp "make_sql_query : " . dump $q;
