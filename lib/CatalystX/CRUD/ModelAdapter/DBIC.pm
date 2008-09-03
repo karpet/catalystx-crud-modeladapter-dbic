@@ -494,7 +494,9 @@ Calls find() on I<dbic_object>.
 
 sub read {
     my ( $self, $c, $object ) = @_;
-    $object->find;    # TODO is this right? what about discard_changes()?
+    #$object->find;    # TODO is this right? what about discard_changes()?
+    $c->log->error("TODO $object does not implement find() method");
+    return $object;
 }
 
 =head2 update( I<context>, I<dbic_object> )
