@@ -247,7 +247,7 @@ sub make_query {
 
     $query->{OPTS} = \%opts;
 
-    #carp "query: " . dump $query;
+    $c->log->debug( "query: " . dump $query ) if $c->debug;
 
     return $query;
 }
@@ -494,6 +494,7 @@ Calls find() on I<dbic_object>.
 
 sub read {
     my ( $self, $c, $object ) = @_;
+
     #$object->find;    # TODO is this right? what about discard_changes()?
     $c->log->error("TODO $object does not implement find() method");
     return $object;
