@@ -36,7 +36,8 @@ CatalystX::CRUD::ModelAdapter::DBIC - CRUD for Catalyst::Model::DBIC::Schema
  
 =head1 DESCRIPTION
 
-
+CatalystX::CRUD::ModelAdapter::DBIC implements the CatalystX::CRUD::ModelAdapter
+API for DBIx::Class.
 
 =head1 METHODS
 
