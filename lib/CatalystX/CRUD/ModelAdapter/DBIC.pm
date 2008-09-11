@@ -278,13 +278,8 @@ sub make_sql_query {
 
     #carp "make_sql_query : " . dump $q;
 
-    if ( defined $q->{query}->[0] ) {
-        if ( uc( $q->{query}->[0] ) eq 'OR' ) {
-            $q->{query}->[0] = '-or';
-        }
-        elsif ( uc( $q->{query}->[0] ) eq 'AND' ) {
-            $q->{query}->[0] = '-and';
-        }
+    if ( $q->{query_obj} ) {
+        $q->{query} = $q->{query_obj}->dbic;
     }
 
     #carp "make_sql_query : " . dump $q;
