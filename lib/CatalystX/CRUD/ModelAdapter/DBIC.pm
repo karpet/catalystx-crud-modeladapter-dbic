@@ -223,10 +223,12 @@ using param names that match I<field_names>.
 =cut
 
 sub make_query {
-    my $self        = shift;
-    my $controller  = shift;
-    my $c           = shift;
-    my $field_names = shift
+    my $self       = shift;
+    my $controller = shift;
+    my $c          = shift;
+    my $field_names 
+        = shift
+        || $c->req->params->{'cxc-query-fields'}
         || $self->_get_field_names( $controller, $c );
 
     my $query = $self->make_sql_query( $controller, $c, $field_names ) || {};
@@ -277,10 +279,10 @@ sub make_sql_query {
     #carp "make_sql_query : " . dump $q;
 
     if ( defined $q->{query}->[0] ) {
-        if ( $q->{query}->[0] eq 'or' ) {
+        if ( uc( $q->{query}->[0] ) eq 'OR' ) {
             $q->{query}->[0] = '-or';
         }
-        elsif ( $q->{query}->[0] eq 'and' ) {
+        elsif ( uc( $q->{query}->[0] ) eq 'AND' ) {
             $q->{query}->[0] = '-and';
         }
     }
