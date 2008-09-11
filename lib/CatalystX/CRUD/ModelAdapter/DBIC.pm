@@ -444,7 +444,7 @@ sub _get_field_names {
         if exists $self->{_field_names};
 
     my $obj
-        = $c->model( $self->model_name )->composed_schema->class($moniker);
+        = $c->model( $self->model_name )->composed_schema->source($moniker);
     my @cols = $obj->columns;
     my @rels = $obj->relationships;
 
