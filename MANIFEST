@@ -36,7 +36,6 @@ t/example/MyApp/lib/MyCRUD/ModelAdapter.pm
 t/example/MyApp/lib/MyCRUD/Song/Form.pm
 t/example/MyApp/Makefile.PL
 t/example/MyApp/myapp.yml
-t/example/MyApp/mycrud.db
 t/example/MyApp/mycrud.sql
 t/example/MyApp/README
 t/example/MyApp/root/album/edit.tt
