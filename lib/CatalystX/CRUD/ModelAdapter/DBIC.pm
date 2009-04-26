@@ -5,14 +5,15 @@ use base qw(
     CatalystX::CRUD::ModelAdapter
     CatalystX::CRUD::Model::Utils
 );
-use Class::C3;
+use MRO::Compat;
+use mro 'c3';
 use Scalar::Util qw( weaken );
 use Carp;
 use Data::Dump qw( dump );
 
 __PACKAGE__->mk_ro_accessors(qw( treat_like_int ));
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 NAME
 
@@ -250,7 +251,7 @@ sub make_query {
 
     $query->{OPTS} = \%opts;
 
-    $c->log->debug( "query: " . dump $query ) if $c->debug;
+    #$c->log->debug( "query: " . dump $query ) if $c->debug;
 
     return $query;
 }
