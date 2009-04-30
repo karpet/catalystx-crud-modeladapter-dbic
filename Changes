@@ -26,6 +26,6 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
         * tweek make_sql_query() output to match DBIC syntax for -or and -and searches
         * get relationships from source not class
 
-0.08    xxx
+0.08    29 April 2009
         * switch to MRO::Compat from Class::C3
 
