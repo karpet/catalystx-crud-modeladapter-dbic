@@ -13,7 +13,7 @@ use Data::Dump qw( dump );
 
 __PACKAGE__->mk_ro_accessors(qw( treat_like_int ));
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 NAME
 
@@ -245,13 +245,18 @@ sub make_query {
     }
 
     # ORDER BY
-    if ( exists $query->{order_by} ) {
-        $opts{order_by} ||= $query->{order_by};
+    if ( exists $query->{sort_by} ) {
+        $opts{order_by} ||= $query->{sort_by};
+
+        # default is to sort by PK, which might not be prefixed.
+        if ( $opts{order_by} !~ m/\./ ) {
+            $opts{order_by} = 'me.' . $opts{order_by};
+        }
     }
 
     $query->{OPTS} = \%opts;
 
-    #$c->log->debug( "query: " . dump $query ) if $c->debug;
+    $c->log->debug( "query: " . dump $query ) if $c->debug;
 
     return $query;
 }

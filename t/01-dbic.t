@@ -1,4 +1,4 @@
-use Test::More tests => 17;
+use Test::More tests => 21;
 
 BEGIN {
     use lib qw( ../../CatalystX-CRUD/trunk/lib t );
@@ -31,7 +31,11 @@ ok( $res = request( HTTP::Request->new( GET => '/crud/1/view' ) ),
     "GET view" );
 
 #diag( $res->content );
-is( $res->content, '{ title => "Beat It", trackid => 1 }', "GET track 1" );
+is_deeply(
+    eval $res->content,
+    { title => "Beat It", trackid => 1 },
+    "GET track 1"
+);
 
 # create
 ok( $res = request(
@@ -46,9 +50,38 @@ ok( $res = request(
 );
 
 #diag( $res->content );
-is( $res->content,
-    '{ title => "Something New, Something Blue", trackid => 8 }',
+is_deeply(
+    eval $res->content,
+    { title => "Something New, Something Blue", trackid => 8 },
     "POST new track"
+);
+
+# GET new track
+ok( $res = request('/crud/8/view'), "get /crud/8/view" );
+is_deeply(
+    eval $res->content,
+    { title => "Something New, Something Blue", trackid => 8 },
+    "GET new track"
+);
+
+# multiple column search
+ok( $res = request(
+        POST(
+            '/crud/search',
+            [   'cxc-query' => qq/me.trackid=7/,
+                'cxc-order' => 'me.trackid ASC me.title DESC',
+            ]
+        )
+    ),
+    'multi-column sort POST'
+);
+
+#warn $res->content;
+
+is_deeply(
+    eval $res->content,
+    { title => "The Way I Am", trackid => 7 },
+    'multi-column sort'
 );
 
 # test *_related features
@@ -69,3 +102,4 @@ ok( $res = request(
 is( $res->headers->{status}, 204, "POST returned OK" );
 
 #dump $res;
+

@@ -29,3 +29,7 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 0.08    29 April 2009
         * switch to MRO::Compat from Class::C3
 
+0.09    13 June 2009
+        * fix ORDER BY via cxc-order so that it actually works, including tests for multi-column sort.
+
+
