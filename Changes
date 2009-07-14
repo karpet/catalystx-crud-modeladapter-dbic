@@ -32,4 +32,7 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 0.09    13 June 2009
         * fix ORDER BY via cxc-order so that it actually works, including tests for multi-column sort.
 
+0.10    14 July 2009
+        * fix tests so that (a) sql is complete and (b) skip is sqlite3 cmd tool not found
+
 

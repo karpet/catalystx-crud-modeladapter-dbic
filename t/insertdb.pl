@@ -2,6 +2,7 @@
 
 use MyDB::Main;
 use strict;
+use Data::Dump qw( dump );
 
 my $schema = MyDB::Main->connect('dbi:SQLite:example.db');
 my $dbh    = $schema->storage->dbh;
@@ -60,8 +61,10 @@ my @cds;
 foreach my $lp ( sort keys %albums ) {
     my $artist
         = $schema->resultset('Artist')->search( { name => $albums{$lp} } );
-    push @cds, [ $lp, $artist->first ];
+    push @cds, [ $lp, $artist->first->artistid ];
 }
+
+#warn dump \@cds;
 
 $schema->populate( 'Cd', [ [qw/title artist/], @cds, ] );
 

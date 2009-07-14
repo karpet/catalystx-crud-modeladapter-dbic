@@ -13,7 +13,7 @@ use Data::Dump qw( dump );
 
 __PACKAGE__->mk_ro_accessors(qw( treat_like_int ));
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 NAME
 

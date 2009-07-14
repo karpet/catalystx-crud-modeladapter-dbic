@@ -11,6 +11,7 @@ WriteMakefile(
     PL_FILES      => {},
     PREREQ_PM     => {
         'Test::More'                    => 0,
+        'Data::Dump'                    => 0,
         'CatalystX::CRUD'               => 0.42,
         'DBIx::Class'                   => 0,
         'Catalyst::Model::DBIC::Schema' => 0,
