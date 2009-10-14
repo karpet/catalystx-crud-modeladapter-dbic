@@ -10,10 +10,11 @@ use mro 'c3';
 use Scalar::Util qw( weaken );
 use Carp;
 use Data::Dump qw( dump );
+use Sort::SQL;
 
 __PACKAGE__->mk_ro_accessors(qw( treat_like_int ));
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 =head1 NAME
 
@@ -245,15 +246,28 @@ sub make_query {
     }
 
     # ORDER BY
+    dump $c->action;
+    dump $field_names;
     if ( exists $query->{sort_by} ) {
         $opts{order_by} ||= $query->{sort_by};
 
         # default is to sort by PK, which might not be prefixed.
-        if ( $opts{order_by} !~ m/\./ ) {
-            $opts{order_by} = 'me.' . $opts{order_by};
+        my $ss = Sort::SQL->parse($opts{order_by});
+        dump $ss;
+        my @order_by;
+        for my $clause (@$ss) {
+            if ($clause->[0] !~ m/\./) {
+                my $name = "me." . $clause->[0];
+                if (grep {$_ eq $name} @$field_names) {
+                    $clause->[0] = $name;
+                }
+                next; # TODO skip if not qualified. see how rdbo addresses m2m issue.
+            }
+            push @order_by, join(' ', @$clause);
         }
+        $opts{order_by} = join(', ', @order_by);
     }
-
+    dump \%opts;
     $query->{OPTS} = \%opts;
 
     $c->log->debug( "query: " . dump $query ) if $c->debug;
