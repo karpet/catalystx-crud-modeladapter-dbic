@@ -246,28 +246,38 @@ sub make_query {
     }
 
     # ORDER BY
-    dump $c->action;
-    dump $field_names;
+    #dump $field_names;
     if ( exists $query->{sort_by} ) {
         $opts{order_by} ||= $query->{sort_by};
 
         # default is to sort by PK, which might not be prefixed.
-        my $ss = Sort::SQL->parse($opts{order_by});
-        dump $ss;
+        my $ss = Sort::SQL->parse( $opts{order_by} );
+
+        #dump $ss;
         my @order_by;
         for my $clause (@$ss) {
-            if ($clause->[0] !~ m/\./) {
-                my $name = "me." . $clause->[0];
-                if (grep {$_ eq $name} @$field_names) {
-                    $clause->[0] = $name;
+            if ( $clause->[0] !~ m/\./ ) {
+
+                if ( $c->req->params->{'cxc-m2m'} ) {
+
+                    # TODO m2m
+
                 }
-                next; # TODO skip if not qualified. see how rdbo addresses m2m issue.
+                else {
+
+                    # o2m
+                    my $name = "me." . $clause->[0];
+                    if ( grep { $_ eq $name } @$field_names ) {
+                        $clause->[0] = $name;
+                    }
+                }
             }
-            push @order_by, join(' ', @$clause);
+            push @order_by, join( ' ', @$clause );
         }
-        $opts{order_by} = join(', ', @order_by);
+        $opts{order_by} = join( ', ', @order_by );
     }
-    dump \%opts;
+
+    #dump \%opts;
     $query->{OPTS} = \%opts;
 
     $c->log->debug( "query: " . dump $query ) if $c->debug;

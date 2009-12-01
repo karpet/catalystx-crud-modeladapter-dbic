@@ -11,6 +11,7 @@ t/example.sql
 t/insertdb.pl
 t/lib/MyApp.pm
 t/lib/MyApp/Controller/CRUD.pm
+t/lib/MyApp/Controller/Root.pm
 t/lib/MyApp/Model/Main.pm
 t/lib/MyForm.pm
 t/lib/MyModelAdapter.pm
