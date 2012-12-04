@@ -38,3 +38,7 @@ Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 0.11    1 Dec 2009
         * fix order by logic to check for cxc-m2m param (still a TODO item)
         * refactor tests to put Root methods in their own controller
+
+0.12    03 Dec 2012
+        * fix RT https://rt.cpan.org/Ticket/Display.html?id=81079
+          SQL::Abstrct order_by syntax
