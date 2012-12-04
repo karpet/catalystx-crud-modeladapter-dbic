@@ -228,7 +228,7 @@ sub make_query {
     my $self       = shift;
     my $controller = shift;
     my $c          = shift;
-    my $field_names 
+    my $field_names
         = shift
         || $c->req->params->{'cxc-query-fields'}
         || $self->_get_field_names( $controller, $c );
@@ -272,9 +272,9 @@ sub make_query {
                     }
                 }
             }
-            push @order_by, join( ' ', @$clause );
+            push @order_by, { '-' . lc( $clause->[1] ) => $clause->[0] };
         }
-        $opts{order_by} = join( ', ', @order_by );
+        $opts{order_by} = \@order_by;
     }
 
     #dump \%opts;
