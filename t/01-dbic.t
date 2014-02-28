@@ -99,9 +99,10 @@ SKIP: {
     ok( $res = request(
             POST(
                 '/crud/search',
-                [   'me.title' => qq/"way i"/,
+                [   'me.title' => qq/"way i" nowayimatchanything/,
                     'cxc-fuzzy2' => 1,
                     'cxc-order' => 'me.trackid ASC me.title DESC',
+                    'cxc-op'    => 'OR',
                 ]   
             )   
         ),  
