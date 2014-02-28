@@ -1,6 +1,6 @@
 Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 
-0.13 xxx
+0.13 28 Feb 2014
  - add tests for Search::QueryParser::SQL 0.010
 
 0.12 03 Dec 2012
