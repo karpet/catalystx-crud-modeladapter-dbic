@@ -1,4 +1,7 @@
-use Test::More tests => 21;
+#!/usr/bin/env perl
+use strict;
+
+use Test::More tests => 23;
 
 BEGIN {
     use lib qw( ../../CatalystX-CRUD/trunk/lib t );
@@ -90,6 +93,27 @@ SKIP: {
         eval $res->content,
         { title => "The Way I Am", trackid => 7 },
         'multi-column sort'
+    );
+
+    # fuzzy search
+    ok( $res = request(
+            POST(
+                '/crud/search',
+                [   'me.title' => qq/"way i"/,
+                    'cxc-fuzzy2' => 1,
+                    'cxc-order' => 'me.trackid ASC me.title DESC',
+                ]   
+            )   
+        ),  
+        'fuzzy search'
+    );  
+
+    #warn $res->content;
+
+    is_deeply(
+        eval $res->content,
+        { title => "The Way I Am", trackid => 7 },
+        'fuzzy search'
     );
 
     # test *_related features
