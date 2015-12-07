@@ -10,13 +10,20 @@ WriteMakefile(
     ABSTRACT_FROM => 'lib/CatalystX/CRUD/ModelAdapter/DBIC.pm',
     PL_FILES      => {},
     PREREQ_PM     => {
-        'Test::More'                    => 0,
-        'Data::Dump'                    => 0,
-        'CatalystX::CRUD'               => 0.42,
-        'DBIx::Class'                   => 0,
-        'Catalyst::Model::DBIC::Schema' => 0,
-        'DBIx::Class::RDBOHelpers'      => 0.04,
+        'Test::More'                        => 0,
+        'Data::Dump'                        => 0,
+        'CatalystX::CRUD'                   => 0.42,
+        'DBIx::Class'                       => 0,
+        'Catalyst::Model::DBIC::Schema'     => 0,
+        'DBIx::Class::RDBOHelpers'          => 0.04,
+        'CatalystX::CRUD::Controller::REST' => 0,
     },
     dist => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'CatalystX-CRUD-ModelAdapter-DBIC-*' },
+    clean      => { FILES => 'CatalystX-CRUD-ModelAdapter-DBIC-*' },
+    META_MERGE => {
+        resources => {
+            repository =>
+                'https://github.com/karpet/catalystx-crud-modeladapter-dbic',
+        },
+    },
 );
