@@ -164,7 +164,8 @@ sub search {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
     my @rs
-        = $c->model( $self->model_name )->resultset( $self->_get_moniker($c) )
+        = $c->model( $self->model_name )
+        ->resultset( $self->_get_moniker($c) )
         ->search( $query->{WHERE}, $query->{OPTS} );
     return wantarray ? @rs : \@rs;
 }
@@ -198,7 +199,8 @@ sub iterator {
     my ( $self, $controller, $c, @arg ) = @_;
     my $query = shift(@arg) || $self->make_query( $controller, $c );
     my $rs
-        = $c->model( $self->model_name )->resultset( $self->_get_moniker($c) )
+        = $c->model( $self->model_name )
+        ->resultset( $self->_get_moniker($c) )
         ->search( $query->{WHERE}, $query->{OPTS} );
     return $rs;
 }
@@ -470,14 +472,14 @@ sub _get_field_names {
     return $self->{_field_names}
         if exists $self->{_field_names};
 
-    my $obj
-        = $c->model( $self->model_name )->composed_schema->source($moniker);
-    my @cols = $obj->columns;
-    my @rels = $obj->relationships;
+    my $table_obj
+        = $c->model( $self->model_name )->composed_schema->class($moniker);
+    my @cols = $table_obj->columns;
+    my @rels = $table_obj->relationships;
 
     my @fields;
     for my $rel (@rels) {
-        my $info = $self->_get_rel_meta( $controller, $c, $obj, $rel );
+        my $info = $self->_get_rel_meta( $controller, $c, $table_obj, $rel );
         my ( $rel_class, $prefix );
 
         #warn "rel info for $moniker $rel: " . dump $info;
@@ -496,7 +498,8 @@ sub _get_field_names {
         push( @fields, 'me.' . $col );
     }
 
-    #carp "field_names for $moniker : " . dump \@fields;
+    #carp sprintf( "field_names for %s [%s] : %s",
+    #    $moniker, $self->model_name, dump \@fields );
 
     $self->{_field_names} = \@fields;
 
