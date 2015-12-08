@@ -14,7 +14,7 @@ use Sort::SQL;
 
 __PACKAGE__->mk_ro_accessors(qw( treat_like_int ));
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 =head1 NAME
 
