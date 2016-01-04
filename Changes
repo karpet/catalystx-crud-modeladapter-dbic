@@ -1,5 +1,8 @@
 Revision history for CatalystX-CRUD-ModelAdapter-DBIC
 
+0.15 04 Jan 2016
+ - fix number of skipped tests if sqlite not present
+
 0.14 07 Dec 2015
  - fix https://rt.cpan.org/Ticket/Display.html?id=110092
 

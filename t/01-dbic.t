@@ -18,7 +18,7 @@ SKIP: {
     #check for sqlite3 cmd line tool
     my @sqlite_version = `sqlite3 -version`;
     if ( !@sqlite_version ) {
-        skip "sqlite3 cmd line tool not found", 20;
+        skip "sqlite3 cmd line tool not found", 22;
     }
 
     system("cd t/ && $^X insertdb.pl") and die "can't create db: $!";
@@ -99,15 +99,15 @@ SKIP: {
     ok( $res = request(
             POST(
                 '/crud/search',
-                [   'me.title' => qq/"way i" nowayimatchanything/,
+                [   'me.title'   => qq/"way i" nowayimatchanything/,
                     'cxc-fuzzy2' => 1,
-                    'cxc-order' => 'me.trackid ASC me.title DESC',
-                    'cxc-op'    => 'OR',
-                ]   
-            )   
-        ),  
+                    'cxc-order'  => 'me.trackid ASC me.title DESC',
+                    'cxc-op'     => 'OR',
+                ]
+            )
+        ),
         'fuzzy search'
-    );  
+    );
 
     #warn $res->content;
 
@@ -121,7 +121,8 @@ SKIP: {
 
     ok( $res = request(
             POST( '/crud/3/cds/1/add', [] ), "/crud/3/tracks/1/add"
-        )
+        ),
+        "add track to cd"
     );
 
     is( $res->headers->{status}, 204, "POST returned OK" );
@@ -131,7 +132,8 @@ SKIP: {
     ok( $res = request(
             POST( '/crud/3/cds/1/remove', [] ),
             "/crud/3/tracks/1/remove"
-        )
+        ),
+        "remove track from cd"
     );
 
     is( $res->headers->{status}, 204, "POST returned OK" );
